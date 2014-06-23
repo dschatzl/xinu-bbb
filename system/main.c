@@ -136,6 +136,9 @@ int32	main(void)
 	kprintf("Setting API mode\n");
 	write(RADIO, "ATAP 2", 6);
 	sleep(5);
+	kprintf("Exiting Command Mode\n");
+	write(RADIO, "ATCN", 4);
+	sleep(5);
 	kprintf("Broadcasting hello world\n");
 	int test = pan_broadcast(RADIO, "hello world", 11);
 	kprintf("%d\n", test);
