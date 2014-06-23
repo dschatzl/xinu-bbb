@@ -130,7 +130,15 @@ int32	main(void)
 	//resume(create(radio_read, 8*1024, 100, "radio_read", 0, NULL));
 	//resume(create(radio_write, 8*1024, 101, "radio_write", 0, NULL));
 	//while(1);
+	kprintf("Entering Command Mode\n");
 	write(RADIO, "+++", 3);
+	sleep(5);
+	kprintf("Setting API mode\n");
+	write(RADIO, "ATAP 2", 6);
+	sleep(5);
+	kprintf("Broadcasting hello world\n");
+	int test = pan_broadcast(RADIO, "hello world", 11);
+	kprintf("%d\n", test);
 	while(1) {
 		char buf[100];
 		int count;

@@ -37,3 +37,5 @@
 #include <pci.h>
 #include <3c905C.h>
 #include <e1000e.h>
+#include <pan_radio.h>
+
