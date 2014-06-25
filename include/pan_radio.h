@@ -18,6 +18,17 @@ struct panpkt {
 	byte *data;	/* The packet payload */
 };
 
-int pan_write_packet(did32 radio, struct panpkt packet);
+struct panpkt_tx_status {
+        byte delimiter;
+        uint16 length;
+        byte api_identifier;
+        byte frame_id;
+        byte status;
+        byte checksum;
+};
+
+void pan_set_checksum(struct panpkt *packet);
+int pan_write_packet(did32 radio, const struct panpkt *packet);
 int pan_broadcast(did32 radio, char *data, int length);
-int pan_read(did32 radio, char *buffer, int length);
+int pan_read(did32 radio, struct panpkt *packet, int length);
+int pan_radio_init(did32 radio);

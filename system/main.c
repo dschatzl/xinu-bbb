@@ -130,35 +130,30 @@ int32	main(void)
 	//resume(create(radio_read, 8*1024, 100, "radio_read", 0, NULL));
 	//resume(create(radio_write, 8*1024, 101, "radio_write", 0, NULL));
 	//while(1);
-	kprintf("Entering Command Mode\n");
-	write(RADIO, "+++", 3);
-	sleep(5);
-	kprintf("Setting API mode\n");
-	write(RADIO, "ATAP 2", 6);
-	sleep(5);
-	kprintf("Exiting Command Mode\n");
-	write(RADIO, "ATCN", 4);
-	sleep(5);
-	kprintf("Broadcasting hello world\n");
-	int test = pan_broadcast(RADIO, "hello world", 11);
-	kprintf("%d\n", test);
-	while(1) {
-		char buf[100];
-		int count;
-		count = 0;
-		while(count == 0) {
-			count = read(RADIO, buf, 0);
-		}
-		buf[count] = '\0';
-		kprintf("%s\n", buf);
-		count = read(CONSOLE, buf, 99);
-		kprintf("read %d\n", count);
-		//buf[count-1] = '\r';
-		write(RADIO, buf, count);
+        int initok = pan_radio_init(RADIO);
+        if(initok == OK) {
+	        int test = pan_broadcast(RADIO, "hello world", 11);
+	        kprintf("%d\n", test);
+	} else {
+	        kprintf("init failed\n");
+	}
+//	while(1) {
+//		char buf[100];
+//		int count;
+//		count = 0;
+//		while(count == 0) {
+//			count = read(RADIO, buf, 0);
+//		}
+//		buf[count] = '\0';
+//		kprintf("%s\n", buf);
+//		count = read(CONSOLE, buf, 99);
+//		kprintf("read %d\n", count);
+//		//buf[count-1] = '\r';
+//		write(RADIO, buf, count);
 		//count = read(RADIO, buf, 3);
 		//buf[count] = '\0';
 		//kprintf("%s\n", buf);
-	}
+//	}
 	//write(CONSOLE, "test\n", 5);
 	//nread = read(CONSOLE, buf, 10);
 	//buf[nread] = '\0';
