@@ -73,7 +73,9 @@ SYSTEM_CFILES =								\
 	signal.c	signaln.c	sleep.c		suspend.c	\
 	unsleep.c	userret.c	wait.c		wakeup.c	\
 	write.c		xdone.c		yield.c		evec.c		\
-	gettime.c	getutime.c	
+	gettime.c	getutime.c 	pan_write.c     pan_checksum.c  \
+	pan_radio_listener.c            pan_read.c      pan_radio_init.c \
+	pan_broadcast.c pan_fill_packet.c
 
 SYSTEM_SFULL = ${SYSTEM_SFILES:%=../system/%}
 SYSTEM_CFULL = ${SYSTEM_CFILES:%=../system/%}
