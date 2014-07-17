@@ -21,8 +21,7 @@ char radgetc() {
 	kprintf("%x", buffer);
 	return (char)buffer;
 }
-void radio_read();
-void radio_write();
+
 int32	main(void)
 
 {
@@ -35,108 +34,22 @@ int32	main(void)
 
 	kprintf("\n\n###########################################################\n\n");
 
-//	done = FALSE;
-//	while (!done) {
-//		printf("Enter s for sender or r for receiver: ");
-//		retval = read(CONSOLE, buf, 20);
-//		if ( retval != 2 ) {
-//			continue;
-//		}
-//		if ( (buf[0] != 'r') && (buf[0] != 's') ) {
-//			continue;
-//		} else {
-//			done = TRUE;
-//		}
-//	}
-//	e1000e_rar_set(&ethertab[0], mac1, 4);
-//	if ( buf[0] == 'r' ) {
-//		while (TRUE) {
-//			retval = read(ETHER0, buf, 1500);
-//			if (retval < 0) {
-//				continue;
-//			}
-//			if (buf[0] == mac1[0]) {
-//				kprintf("success!\n");
-//			}
-//		}
-//	} else {
-//		for (i=0; i<1500; i++) {
-//			*(i + (char *)&pkt) = 0xff&i;
-//		}
-//		memcpy(pkt.net_ethdst, mac1, 6);
-//		control(ETHER0, ETH_CTRL_GET_MAC,
-//				(int32)&pkt.net_ethsrc, 0);
-//		pkt.net_ethtype = ntohs(0x0800);
-//		while (TRUE) {
-//			retval = read(CONSOLE, buf, 100);
-//			write(ETHER0, (char *)&pkt, 1200);
-//		}
-//	}
-	//disable();
-	/*uint32 *cmwkup = 0x44e00400;
-	kprintf("cmwkup off 0 %x\n", *cmwkup);
-	cmwkup = 0x44e004c4;
-	*cmwkup = 0x2;
-	cmwkup = 0x44e0014c;
-	kprintf("32khz clk %x\n", *cmwkup);
-	*cmwkup = 0x2;
-	kprintf("32khz clk %x\n", *cmwkup);
-	cmwkup = 0x44e00150;
-	kprintf("24MHz clk %x\n", *cmwkup);
-	cmwkup = 0x44e00528;
-	*cmwkup = 0;
-	clkinit();
-	kprintf("returned from clkinit\n");
-	struct am335x_timer1ms *tcsrptr = 0x44e31000;
-	tcsrptr->ttgr = 1;
-	while(1);*/
-	/*while(1) {
-		kprintf("testing sleep %d\n", clktime);
-		sleep(1);
-	}
-	uint32 *padptr = 0x44e10980;
-	kprintf("uart1_rxd %x\n", *padptr);
-	uint32 padvalue;
-	padvalue = *padptr;
-	padvalue &= 0xffffffb8;
-	//padvalue |= 0x00000060;
-	*padptr = padvalue;
-	kprintf("uart1_rxd %x\n", *padptr);
-	padptr = 0x44e10984;
-	kprintf("uart1_txd %x\n", *padptr);
-	padvalue = *padptr;
-	padvalue &= 0xffffff98;
-	//padvalue |= 0x00000040;
-	*padptr = padvalue;
-	kprintf("uart1_txd %x\n", *padptr);
-	kprintf("trying to communicate with radio\n");
-	char buf[100] = {'\0'};
-	uint32 nread;
-	//write(RADIO, "+++", 3);
-	//nread = read(RADIO, buf, 3);
-	kprintf("nread %d msg %s\n", nread, buf);			
-	kprintf("...starting the network\n");
-	//netstart();
-	printf("radio comm\n");
-	struct uart_csreg *csrptr = devtab[RADIO].dvcsr;*/
-	/*kprintf("sending a +++\n");
-	radputc('+');
-	radputc('+');
-	radputc('+');
-	kprintf("reading back from radio");
-	kprintf("%c", radgetc());
-	kprintf("%c", radgetc());
-	kprintf("%c", radgetc());*/
-	//resume(create(radio_read, 8*1024, 100, "radio_read", 0, NULL));
-	//resume(create(radio_write, 8*1024, 101, "radio_write", 0, NULL));
-	//while(1);
+        kprintf("About to init radio...");
         int initok = pan_radio_init(RADIO);
-        if(initok == OK) {
-	        int test = pan_broadcast(RADIO, "hello world", 11);
-	        kprintf("%d\n", test);
-	} else {
-	        kprintf("init failed\n");
-	}
+        kprintf("done. Init returned %d\n", initok);
+        
+        struct panpkt test;
+        char data[256];
+        test.data = data;
+        int readok = pan_read_rx(RADIO, &test, 256);
+        if(readok == OK) {
+                kprintf("packet data: ");
+                int i;
+                for(i = 0; i < 256; i++) {
+                        kprintf("%X ", test.data[i]);
+                }
+        }
+        
 //	while(1) {
 //		char buf[100];
 //		int count;
