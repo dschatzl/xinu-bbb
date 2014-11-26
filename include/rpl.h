@@ -1,38 +1,49 @@
 #include <xinu.h>
 
-#define RPL_ICMP_TYPE 	155
+#define RPL_ICMP_TYPE 		155
 
 /* RPL Control Message Codes - defined in RFC 6550, section 6 */
-#define RPL_DIS 	0x00	/* DODAG Information Solicitation */
-#define RPL_DIO 	0x01	/* DODAG Information Object */
-#define RPL_DAO 	0X02	/* Destination Advertisement Object */
-#define RPL_DAO_ACK	0x03	/* Destination Advertisement Object Acknowledgment */
-#define S_RPL_DIS	0X80	/* Secure DODAG Information Solicitation */
-#define S_RPL_DIO	0x81	/* Secure DODAG Information Object */
-#define S_RPL_DAO	0x82	/* Secure Destination Advertisement Object */
-#define S_RPL_DAO_ACK	0x83	/* Secure Destination Advertisement Object Acknowledgment */
-#define RPL_CONS_CK	0x84	/* Consistency Check */
+#define RPL_DIS 		0x00	/* DODAG Information Solicitation */
+#define RPL_DIO 		0x01	/* DODAG Information Object */
+#define RPL_DAO 		0X02	/* Destination Advertisement Object */
+#define RPL_DAO_ACK		0x03	/* Destination Advertisement Object Acknowledgment */
+#define S_RPL_DIS		0X80	/* Secure DODAG Information Solicitation */
+#define S_RPL_DIO		0x81	/* Secure DODAG Information Object */
+#define S_RPL_DAO		0x82	/* Secure Destination Advertisement Object */
+#define S_RPL_DAO_ACK		0x83	/* Secure Destination Advertisement Object Acknowledgment */
+#define RPL_CONS_CK		0x84	/* Consistency Check */
 
 /* RPL Control Message Options */
-#define RPL_DIS_PAD1	0x00	/* Pad 1 */
-#define RPL_DIS_PADN	0x01	/* Pad N */
-#define RPL_DIS_SOL	0x07	/* Solicited Information */
+#define RPL_DIS_PAD1		0x00	/* Pad 1 */
+#define RPL_DIS_PADN		0x01	/* Pad N */
+#define RPL_DIS_SOL		0x07	/* Solicited Information */
 
-#define RPL_DIO_PAD1	0x00	/* Pad 1 */
-#define RPL_DIO_PADN	0x01	/* Pad N */
-#define RPL_DIO_DMC	0x02	/* DAG Metric Container */
-#define RPL_DIO_RI	0x03	/* Routing Information */
-#define RPL_DIO_DC	0x04	/* DODAG Configuration */
-#define RPL_DIO_PI	0x08	/* Prefix Information */
+#define RPL_DIO_PAD1		0x00	/* Pad 1 */
+#define RPL_DIO_PADN		0x01	/* Pad N */
+#define RPL_DIO_DMC		0x02	/* DAG Metric Container */
+#define RPL_DIO_RI		0x03	/* Routing Information */
+#define RPL_DIO_DC		0x04	/* DODAG Configuration */
+#define RPL_DIO_PI		0x08	/* Prefix Information */
 
-#define RPL_DAO_PAD1	0x00	/* Pad 1 */
-#define RPL_DAO_PADN	0x01	/* Pad N */
-#define RPL_DAO_RT	0x05	/* RPL Target */
-#define RPL_DAO_TI	0x06	/* Transit Information */
-#define RPL_DAO_RTD	0x09	/* RPL Target Descriptor */
+#define RPL_DAO_PAD1		0x00	/* Pad 1 */
+#define RPL_DAO_PADN		0x01	/* Pad N */
+#define RPL_DAO_RT		0x05	/* RPL Target */
+#define RPL_DAO_TI		0x06	/* Transit Information */
+#define RPL_DAO_RTD		0x09	/* RPL Target Descriptor */
 
-#define RPL_CC_PAD1	0x00	/* Pad 1 */
-#define RPL_CC_PADN	0x01	/* Pad N */
+#define RPL_CC_PAD1		0x00	/* Pad 1 */
+#define RPL_CC_PADN		0x01	/* Pad N */
+
+/* RPL Constants - Defined in RFC 6550, Section 17 */
+#define RPL_BASE_RANK		0
+#define RPL_INF_RANK		0xFFFF	/* Maximum rank a node can have */
+#define RPL_DEF_INST		0	/* RPL Instance ID used by a node without an overriding policy */
+#define RPL_DEF_PATH_CTL_SZ	0	/* RPL Default Path Control Size */
+#define RPL_DEF_DIO_INT_MIN	3 	/* RPL Default DIO Interval Min */
+#define RPL_DEF_DIO_INT_DOUBL	20	/* RPL Default DIO Interval Doublings */
+#define RPL_DEF_DIO_RED_CONST	10	/* RPL Default DIO Redundancy Constant */
+#define RPL_DEF_MIN_HOP_RK_INC	256	/* RPL Default Min Hop Rank Increase */
+#define RPL_DEF_DAO_DELAY	1	/* RPL Default DAO Deplay */
 
 /* RPL Base Object Definitions */
 struct rpl_dis_base 
