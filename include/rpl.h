@@ -14,16 +14,25 @@
 #define RPL_CONS_CK	0x84	/* Consistency Check */
 
 /* RPL Control Message Options */
-#define RPL_DIS_PAD1	0x00
-#define RPL_DIS_PADN	0x01
-#define RPL_DIS_SOL	0x07
+#define RPL_DIS_PAD1	0x00	/* Pad 1 */
+#define RPL_DIS_PADN	0x01	/* Pad N */
+#define RPL_DIS_SOL	0x07	/* Solicited Information */
 
-#define RPL_DIO_PAD1	0x00
-#define RPL_DIO_PADN	0x01
-#define RPL_DIO_DMC	0x02
-#define RPL_DIO_RI	0x03
-#define RPL_DIO_DC	0x04
-#define RPL_DIO_PI	0x08
+#define RPL_DIO_PAD1	0x00	/* Pad 1 */
+#define RPL_DIO_PADN	0x01	/* Pad N */
+#define RPL_DIO_DMC	0x02	/* DAG Metric Container */
+#define RPL_DIO_RI	0x03	/* Routing Information */
+#define RPL_DIO_DC	0x04	/* DODAG Configuration */
+#define RPL_DIO_PI	0x08	/* Prefix Information */
+
+#define RPL_DAO_PAD1	0x00	/* Pad 1 */
+#define RPL_DAO_PADN	0x01	/* Pad N */
+#define RPL_DAO_RT	0x05	/* RPL Target */
+#define RPL_DAO_TI	0x06	/* Transit Information */
+#define RPL_DAO_RTD	0x09	/* RPL Target Descriptor */
+
+#define RPL_CC_PAD1	0x00	/* Pad 1 */
+#define RPL_CC_PADN	0x01	/* Pad N */
 
 /* RPL Base Object Definitions */
 struct rpl_dis_base 
@@ -34,23 +43,43 @@ struct rpl_dis_base
 
 struct rpl_dio_base
 {
-	byte 	rpl_instance_id;
-	byte 	version;
-	int16 	rank;
-	byte	g_mop_prf; /* byte with the format <Grounded>0<Mode of Operation - 3 bits><DODAG Preference - 3 bits> */
-	byte	dtsn;
-	byte	flags;
-	byte	reserved; /* To Be Ignored */
-	uint64	dodag_id_high;
-	uint64	dodag_id_low;
+	byte 		rpl_instance_id;
+	byte 		version;
+	int16 		rank;
+	byte		g_mop_prf; 	/* byte with the format <Grounded>0<Mode of Operation - 3 bits><DODAG Preference - 3 bits> */
+	byte		dtsn;		/* Destination Advertisement Trigger Sequence Number */
+	byte		flags;
+	byte		reserved; 	/* To Be Ignored */
+	byte[16]	dodag_id;
 };
 
 struct rpl_dao_base
 {
-	byte	rpl_instance_id;
-	byte	k_d_flags; /* byte with format <K><D><Flags - 6 bits> */
-	byte	reserved; /* To Be Ignored */
-	byte	dao_instance;
-	uint64	dodag_id_high; /* Optional, if present D must be 1 */
-	uint64	dodag_id_low; /* Optional, if present D must be 1 */
+	byte		rpl_instance_id;
+	byte		k_d_flags; 	/* byte with format <K><D - DODAG ID Presents, will always be 0><Flags - 6 bits> */
+	byte		reserved; 	/* To Be Ignored */
+	byte		dao_instance;
+	/* NB: RFC 6550 also allows for an optional DODAG ID to be specified,
+	 * but we are not supporting that at this time since we are assuming
+	 * that only one DODAG will be present at once */
+};
+
+struct rpl_dao_ack_base
+{
+	byte		rpl_instance_id;
+	byte		d_flag_reserved	/* Lowest order bit describes if DODAG ID is present (will be 0 for now) and the rest are to be ignored */
+	byte		dao_instance;
+	byte		status;
+        /* NB: RFC 6550 also allows for an optional DODAG ID to be specified,
+	 * but we are not supporting that at this time since we are assuming
+	 * that only one DODAG will be present at once */
+};
+
+struct rpl_consistency_check_base
+{
+	byte		rpl_instance_id;
+	byte		r_flags;	/* Lowest order bit is 1 if message is a response, 0 otherwise. The rest are reserved for flags, but must be set to 0 by sender */
+	uint16		cc_nonce;	/* Set by request, and is the same for the corresponding response */
+	byte[16]	dodag_id;	/* Identifier of the DODAG root */
+	uint32		dest_counter;	/* Destination Counter */
 };
