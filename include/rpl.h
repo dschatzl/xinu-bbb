@@ -1,6 +1,7 @@
 #include <xinu.h>
 
 #define RPL_ICMP_TYPE 		155
+#define RPL_INTERFACE		0
 
 /* RPL Control Message Codes - defined in RFC 6550, section 6 */
 #define RPL_DIS 		0x00	/* DODAG Information Solicitation */
@@ -94,3 +95,14 @@ struct rpl_consistency_check_base
 	byte[16]	dodag_id;	/* Identifier of the DODAG root */
 	uint32		dest_counter;	/* Destination Counter */
 };
+
+/* RPL State Structs */
+struct rpl_info
+{
+	byte		rpl_instance_id;
+	byte[16]	dodag_id;
+	byte		dodag_version;
+	uint16		rank;
+};
+
+extern struct rpl_info rpl_current;
