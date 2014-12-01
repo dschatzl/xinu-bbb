@@ -15,25 +15,16 @@
 #define RPL_CONS_CK		0x84	/* Consistency Check */
 
 /* RPL Control Message Options */
-#define RPL_DIS_PAD1		0x00	/* Pad 1 */
-#define RPL_DIS_PADN		0x01	/* Pad N */
-#define RPL_DIS_SOL		0x07	/* Solicited Information */
-
-#define RPL_DIO_PAD1		0x00	/* Pad 1 */
-#define RPL_DIO_PADN		0x01	/* Pad N */
-#define RPL_DIO_DMC		0x02	/* DAG Metric Container */
-#define RPL_DIO_RI		0x03	/* Routing Information */
-#define RPL_DIO_DC		0x04	/* DODAG Configuration */
-#define RPL_DIO_PI		0x08	/* Prefix Information */
-
-#define RPL_DAO_PAD1		0x00	/* Pad 1 */
-#define RPL_DAO_PADN		0x01	/* Pad N */
-#define RPL_DAO_RT		0x05	/* RPL Target */
-#define RPL_DAO_TI		0x06	/* Transit Information */
-#define RPL_DAO_RTD		0x09	/* RPL Target Descriptor */
-
-#define RPL_CC_PAD1		0x00	/* Pad 1 */
-#define RPL_CC_PADN		0x01	/* Pad N */
+#define RPL_OPT_PAD1		0x00	/* Pad 1 */
+#define RPL_OPT_PADN		0x01	/* Pad N */
+#define RPL_OPT_SOL		0x07	/* Solicited Information */
+#define RPL_OPT_DMC		0x02	/* DAG Metric Container */
+#define RPL_OPT_RI		0x03	/* Routing Information */
+#define RPL_OPT_DC		0x04	/* DODAG Configuration */
+#define RPL_OPT_PI		0x08	/* Prefix Information */
+#define RPL_OPT_RT		0x05	/* RPL Target */
+#define RPL_OPT_TI		0x06	/* Transit Information */
+#define RPL_OPT_RTD		0x09	/* RPL Target Descriptor */
 
 /* RPL Constants - Defined in RFC 6550, Section 17 */
 #define RPL_BASE_RANK		0
@@ -103,6 +94,14 @@ struct rpl_info
 	byte[16]	dodag_id;
 	byte		dodag_version;
 	uint16		rank;
+	byte		dao_sequence;
 };
 
+/* Global current RPL State */
 extern struct rpl_info rpl_current;
+
+/* RPL Functions */
+void	rpl_init(void);
+int32	rpl_send_dis(int32);
+int32	rpl_recv_dio(int32, uint32, struct rpl_dio_base*, char*, uint32);
+int32	rpl_send_dao(int32, bool8, char*, uint32);

@@ -1,5 +1,18 @@
 #include <xinu.h>
 
+struct rpl_info rpl_current;
+
+uint32 rpl_fill_options(char*, uint32, char*, uint32);
+
+/* -------------------------------------------------------
+ * rpl_init - Initializes global RPL variables
+ * -------------------------------------------------------
+ */
+void rpl_init(void)
+{
+	memset(&rpl_current, 0, sizeof(struct rpl_info));
+}
+
 /* --------------------------------------------------------
  * rpl_send_dis - sends out a DIS on the supplied interface
  * --------------------------------------------------------
@@ -51,39 +64,137 @@ int32 	rpl_recv_dio (
 
 	memcpy(base, full_buf, sizeof(struct rpl_dio_base));
 	
-	/* Fill out the options buffer if there are options */
 	if(opts_buf != NULL)
 	{
-		int32 bytes_remaining = bytes_recv - sizeof(struct rpl_dio_base);
-		uint32 buf_position = sizeof(struct rpl_dio_base);
-		uint32 bytes_written = 0;
+		uint32 bytes_written = rpl_fill_options(
+					(full_buf + sizeof(struct rpl_dio_base)), 
+					bytes_recv - sizeof(struct rpl_dio_base),
+					opts_buf, len);
 
-		while(bytes_remaining > 0 && bytes_written < len)
-		{
-			byte option_type = full_buf[buf_position];
-			switch(option_type)
-			{
-				case RPL_DIS_PAD1:
-					buf_position += sizeof(byte);
-					break;
-				case RPL_DIS_PADN:
-					char pad_len = full_buf[buf_position + sizeof(byte)];
-					/* The additional 1 comes from skipping over type */
-					buf_position += (pad_len + 1) * sizeof(byte);
-					break;
-				default:
-					char opt_len = full_buf[buf_position + sizeof(byte)];
-					/* Make sure there is room in opts_buf */
-					if(bytes_written + opt_len < len)
-					{
-						memcpy((opts_buf + bytes_written), (full_buf + buf_position), opt_len);
-					}
-					bytes_written += opt_len;
-					/* The additional 1 comes from skipping over type */
-					buf_position += (opt_len + 1) * sizeof(byte);
-			}
-		}
+		return (bytes_written + sizeof(struct rpl_dio_base));
+	} else 
+	{
+		return sizeof(struct rpl_dio_base);
+	}
+}
+
+/* -------------------------------------------------------
+ * recv_dao_ack - Receives DAO-ACK and copies as much of
+ * the included options into the options buffer 
+ * -------------------------------------------------------
+ */
+int32   recv_dao_ack (
+        int32                   slot,		/* The ICMP slot */
+	uint32                  timeout,	/* How long to wait before timeout */
+	struct rpl_dao_ack_base *base,		/* RPL DAO-ACK base */
+	char                    *opts_buf,	/* RPL Options buffer */
+	uint32                  len		/* The length of opts_buf */
+	)
+{
+	uint32 buf_size = len + sizeof(struct rpl_dao_ack_base);
+	char full_buf[buf_size];
+	memset(full_buf, 0, buf_size);
+	int32 bytes_recv = icmp_recv(slot, full_buf, buf_size, timeout);
+	if(bytes_recv == SYSERR)
+	{
+		return SYSERR;
 	}
 
-	return bytes_recv;
+	memcpy(base, full_buf, sizeof(struct rpl_dao_ack_base));
+
+	if(opts_buf != NULL)
+	{
+		uint32 bytes_written = rpl_fill_options(
+					full_buf + sizeof(struct rpl_dao_ack_base),
+					bytes_recv - sizeof(struct rpl_dao_ack_base),
+					opts_buf, len);
+		return (bytes_written + sizeof(struct rpl_dao_ack_base));
+	} else 
+	{
+		return sizeof(struct rpl_dao_ack_base);	
+	}
+}
+
+/* -------------------------------------------------------------
+ * rpl_fill_options - Fills the buffer with all options,
+ * except for pad options
+ * -------------------------------------------------------------
+ */
+uint32	rpl_fill_options (
+	char *opt_src, 	/* Option source buffer */
+	uint32 src_len, /* Option source buffer length */
+	char *opt_dst, 	/* Option destination buffer */
+	uint32 dst_len	/* Option destination buffer length */
+	)
+{
+	uint32 bytes_written = 0;
+	uint32 buf_position = 0;
+	int32 bytes_remaining = src_len;
+	while(bytes_remaining > 0 && bytes_written < dst_len)
+	{
+		byte option_type = full_buf[buf_position];
+		switch(option_type)
+		{
+			case RPL_OPT_PAD1:
+				buf_position++;
+				bytes_remaining--;
+				break;
+			case RPL_OPT_PADN:
+				char pad_len = opt_src[buf_position + 1];
+				/* Skip the pad bytes.
+				 * Note that pad_len encompasses the number of blank octets
+				 * as well as the option type and length bytes.
+				 */
+				buf_position += pad_len;
+				bytes_remaining -= pad_len;
+				break;
+			default:
+				char opt_len = opt_src[buf_position + 1];
+				if((bytes_written + opt_len + 2) < len)
+				{
+					/* Copy the option type, length and the actual option value */
+					memcpy((opt_dst + bytes_written), (opt_src + buf_position), opt_len + 2);
+					bytes_written += opt_len + 2;
+					bytes_remaining -= opt_len + 2;
+					buf_position += opt_len + 2;
+				} else 
+				{
+					/* return when the option can't be copied to the buffer */
+					return bytes_written;
+				}
+		}
+
+	}
+
+	return bytes_written;
+}
+
+int32   rpl_send_dao (  
+	int32   interface,      /* The interface on which to send the DAO */
+	bool8   expect_ack,     /* True if expecting an DAO-ACK */                                     
+	char    *options,       /* The options to send along with the DAO */
+	uint32  len             /* The length of the options buffer */                                 
+	)
+{
+	struct rpl_dao_base base;                                                                      
+	memset(&base, 0, sizeof(struct rpl_dao_base));                                                 
+	base.rpl_instance_id = rpl_current.rpl_instance_id;
+	base.dao_instance = rpl_current.dao_sequence++;
+
+	if(expect_ack)
+	{
+		base.k_d_flags = 1;
+		/* The D flag is never set because we aren't supporting the optional DODAG ID for now */
+	}
+
+	char data[len + sizeof(struct rpl_dao_base)];
+	memcpy(data, &base, sizeof(struct rpl_dao_base));
+	memcpy((data + sizeof(struct rpl_dao_base)), options, len);
+
+	struct ipinfo ipdata;
+	memset(&ipdata, 0, sizeof(struct ipinfo));
+	memcpy(ipdata.ipdst, &(current_rpl.dodag_id), 16);
+	/* TODO: How to get ipsrc? */
+
+	return icmp_send(interface, RPL_ICMP_TYPE, RPL_DAO, &ipdata, data, len + sizeof(struct rpl_dao_base));
 }
