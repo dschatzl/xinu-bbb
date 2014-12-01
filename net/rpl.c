@@ -132,7 +132,8 @@ uint32	rpl_fill_options (
 	int32 bytes_remaining = src_len;
 	while(bytes_remaining > 0 && bytes_written < dst_len)
 	{
-		byte option_type = full_buf[buf_position];
+		byte option_type = opt_src[buf_position];
+		byte opt_len;
 		switch(option_type)
 		{
 			case RPL_OPT_PAD1:
@@ -140,17 +141,17 @@ uint32	rpl_fill_options (
 				bytes_remaining--;
 				break;
 			case RPL_OPT_PADN:
-				char pad_len = opt_src[buf_position + 1];
+				opt_len = opt_src[buf_position + 1];
 				/* Skip the pad bytes.
 				 * Note that pad_len encompasses the number of blank octets
 				 * as well as the option type and length bytes.
 				 */
-				buf_position += pad_len;
-				bytes_remaining -= pad_len;
+				buf_position += opt_len;
+				bytes_remaining -= opt_len;
 				break;
 			default:
-				char opt_len = opt_src[buf_position + 1];
-				if((bytes_written + opt_len + 2) < len)
+				opt_len = opt_src[buf_position + 1];
+				if((bytes_written + opt_len + 2) < dst_len)
 				{
 					/* Copy the option type, length and the actual option value */
 					memcpy((opt_dst + bytes_written), (opt_src + buf_position), opt_len + 2);
@@ -193,7 +194,7 @@ int32   rpl_send_dao (
 
 	struct ipinfo ipdata;
 	memset(&ipdata, 0, sizeof(struct ipinfo));
-	memcpy(ipdata.ipdst, &(current_rpl.dodag_id), 16);
+	memcpy(ipdata.ipdst, &(rpl_current.dodag_id), 16);
 	/* TODO: How to get ipsrc? */
 
 	return icmp_send(interface, RPL_ICMP_TYPE, RPL_DAO, &ipdata, data, len + sizeof(struct rpl_dao_base));

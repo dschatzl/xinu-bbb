@@ -1,4 +1,4 @@
-#include <xinu.h>
+/* rpl.h - definitions for the Routing Protocol for Low-power, Lossy Networks */
 
 #define RPL_ICMP_TYPE 		155
 #define RPL_INTERFACE		0
@@ -53,7 +53,7 @@ struct rpl_dio_base
 	byte		dtsn;		/* Destination Advertisement Trigger Sequence Number */
 	byte		flags;
 	byte		reserved; 	/* To Be Ignored */
-	byte[16]	dodag_id;
+	byte		dodag_id[16];
 };
 
 struct rpl_dao_base
@@ -70,7 +70,7 @@ struct rpl_dao_base
 struct rpl_dao_ack_base
 {
 	byte		rpl_instance_id;
-	byte		d_flag_reserved	/* Lowest order bit describes if DODAG ID is present (will be 0 for now) and the rest are to be ignored */
+	byte		d_flag_reserved;	/* Lowest order bit describes if DODAG ID is present (will be 0 for now) and the rest are to be ignored */
 	byte		dao_instance;
 	byte		status;
         /* NB: RFC 6550 also allows for an optional DODAG ID to be specified,
@@ -83,7 +83,7 @@ struct rpl_consistency_check_base
 	byte		rpl_instance_id;
 	byte		r_flags;	/* Lowest order bit is 1 if message is a response, 0 otherwise. The rest are reserved for flags, but must be set to 0 by sender */
 	uint16		cc_nonce;	/* Set by request, and is the same for the corresponding response */
-	byte[16]	dodag_id;	/* Identifier of the DODAG root */
+	byte		dodag_id[16];	/* Identifier of the DODAG root */
 	uint32		dest_counter;	/* Destination Counter */
 };
 
@@ -91,7 +91,7 @@ struct rpl_consistency_check_base
 struct rpl_info
 {
 	byte		rpl_instance_id;
-	byte[16]	dodag_id;
+	byte		dodag_id[16];
 	byte		dodag_version;
 	uint16		rank;
 	byte		dao_sequence;
