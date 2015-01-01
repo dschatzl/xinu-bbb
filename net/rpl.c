@@ -18,7 +18,8 @@ void rpl_init(void)
  * --------------------------------------------------------
  */
 int32 	rpl_send_dis (
-	int32 interface /* Interface to send out a RPL DIO */
+	int32 interface, /* Interface to send out a RPL DIO */
+	byte dest[16]	/* Destination address */
 	)
 {
 	struct rpl_dis_base dis;
@@ -36,6 +37,7 @@ int32 	rpl_send_dis (
 	ipdata.ipdst[14] = 0x02;
 	ipdata.ipdst[0] = 0x1A;
 	/* TODO: How do I set ipdata.ipsrc? */
+	
 
 	return icmp_send(interface, RPL_ICMP_TYPE, RPL_DIS, &ipdata, (char*)&dis, sizeof(dis));
 }
@@ -170,6 +172,10 @@ uint32	rpl_fill_options (
 	return bytes_written;
 }
 
+/* ------------------------------------------------------------------------
+ * rpl_send_dao - Constructs a DODAG Advertising Object, copies the options 
+ * and sends it on the provided interface.
+ * ------------------------------------------------------------------------ */
 int32   rpl_send_dao (  
 	int32   interface,      /* The interface on which to send the DAO */
 	bool8   expect_ack,     /* True if expecting an DAO-ACK */                                     
@@ -198,4 +204,24 @@ int32   rpl_send_dao (
 	/* TODO: How to get ipsrc? */
 
 	return icmp_send(interface, RPL_ICMP_TYPE, RPL_DAO, &ipdata, data, len + sizeof(struct rpl_dao_base));
+}
+
+/* ---------------------------------------------------------------------------
+ * rpl_send_dio - Constructs a DODAG Information Object, copies the options
+ * and sends it on the provided interface.
+ * --------------------------------------------------------------------------- */
+int32	rpl_send_dio (
+	int32 interface, 	/* The interface on which to send the DIO */
+	char *options, 		/* The options to send along with the DIO */
+	uint32 len		/* The length of the options buffer */
+	)
+{
+	struct rpl_dio_base base;
+	memset(&base, 0, sizeof(struct rpl_dio_base));
+	
+	base.rpl_instance_id = rpl_current.rpl_instance_id;
+	base.version = rpl_current.dodag_version;
+	base.rank = rpl_current.rank;
+	base.g_mop_prf = rpl_current.g_mop_preference;
+	base.
 }

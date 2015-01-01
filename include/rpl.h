@@ -1,7 +1,6 @@
 /* rpl.h - definitions for the Routing Protocol for Low-power, Lossy Networks */
 
 #define RPL_ICMP_TYPE 		155
-#define RPL_INTERFACE		0
 
 /* RPL Control Message Codes - defined in RFC 6550, section 6 */
 #define RPL_DIS 		0x00	/* DODAG Information Solicitation */
@@ -36,6 +35,16 @@
 #define RPL_DEF_DIO_RED_CONST	10	/* RPL Default DIO Redundancy Constant */
 #define RPL_DEF_MIN_HOP_RK_INC	256	/* RPL Default Min Hop Rank Increase */
 #define RPL_DEF_DAO_DELAY	1	/* RPL Default DAO Deplay */
+
+/* RPL Modes of Operation */
+#define RPL_MOP_NO_DN_RTS	0	/* No downward routes maintained by RPL */
+#define RPL_MOP_NON_STORING	1	/* Non-Storing mode of operation */
+#define RPL_MOP_STORE_NO_MCAST	2	/* Storing Mode with no Multicast Support */
+#define RPL_MOP_STORE_MCAST	3	/* Storing Mode with Multicast Support */
+
+/* DODAG Preference Values */
+#define RPL_DAG_MOST_PREF	0x07	/* Most preferred amoung DODAG roots */
+#define RPL_DAG_LEAST_PREF	0x00	/* Least preferred amoung DODAG roots */
 
 /* RPL Base Object Definitions */
 struct rpl_dis_base 
@@ -95,6 +104,8 @@ struct rpl_info
 	byte		dodag_version;
 	uint16		rank;
 	byte		dao_sequence;
+	byte		g_mop_preference;
+	byte		dtsn;
 };
 
 /* Global current RPL State */
@@ -102,6 +113,8 @@ extern struct rpl_info rpl_current;
 
 /* RPL Functions */
 void	rpl_init(void);
-int32	rpl_send_dis(int32);
+int32	rpl_send_dis(int32, byte*);
 int32	rpl_recv_dio(int32, uint32, struct rpl_dio_base*, char*, uint32);
 int32	rpl_send_dao(int32, bool8, char*, uint32);
+
+int32	rpl_send_dio(int32, char*, uint32);
