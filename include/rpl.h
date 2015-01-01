@@ -2,6 +2,8 @@
 
 #define RPL_ICMP_TYPE 		155
 
+#define RPL_NODE_NUM		16	/* TODO: Is this a good number of nodes to support */
+
 /* RPL Control Message Codes - defined in RFC 6550, section 6 */
 #define RPL_DIS 		0x00	/* DODAG Information Solicitation */
 #define RPL_DIO 		0x01	/* DODAG Information Object */
@@ -108,6 +110,17 @@ struct rpl_info
 	byte		dtsn;
 };
 
+/* RPL Node Entry */
+struct rpl_entry 
+{
+	ifipaddr node;		/* The node that this entry refers to */
+	ifipaddr parent;	/* The parent of this node */
+	/* TODO: Technically, a node can have multiple parents...for now,
+		only one parent is supported.  This will probably need fixing. */
+};
+
+extern struct rpl_entry rpl_tab[RPL_NUM_NODES];
+
 /* Global current RPL State */
 extern struct rpl_info rpl_current;
 
@@ -117,4 +130,4 @@ int32	rpl_send_dis(int32, byte*);
 int32	rpl_recv_dio(int32, uint32, struct rpl_dio_base*, char*, uint32);
 int32	rpl_send_dao(int32, bool8, char*, uint32);
 
-int32	rpl_send_dio(int32, char*, uint32);
+int32	rpl_send_dio(int32, char*, uint32, struct ipinfo*);

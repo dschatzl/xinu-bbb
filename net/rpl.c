@@ -1,6 +1,7 @@
 #include <xinu.h>
 
 struct rpl_info rpl_current;
+struct rpl_entry rpl_tab[RPL_NUM_NODES];
 
 uint32 rpl_fill_options(char*, uint32, char*, uint32);
 
@@ -11,6 +12,17 @@ uint32 rpl_fill_options(char*, uint32, char*, uint32);
 void rpl_init(void)
 {
 	memset(&rpl_current, 0, sizeof(struct rpl_info));
+
+	/* The following sets the default information for border routers */
+	byte g_mop_pref = 1; /* Set the G flag */
+	g_mop_pref |= (RPL_MOP_NON_STORING << 3); /* Set the default non-storing mode of operation */
+	g_mop_pref |= (RPL_DAG_LEAST_PREF << 5); /* By default, the root is least preferred */
+	rpl_current.g_mop_preference = g_mop_pref;
+
+	/* Set the DODAG ID to be the IPv6 address of the network interface */
+	memcpy(rpl_current.dodag_id, if_tab[0].if_ipucast[0].ipaddr, 16);
+
+	memset(rpl_tab, 0, sizeof(rpl_entry) * RPL_NUM_NODES);
 }
 
 /* --------------------------------------------------------
@@ -200,7 +212,7 @@ int32   rpl_send_dao (
 
 	struct ipinfo ipdata;
 	memset(&ipdata, 0, sizeof(struct ipinfo));
-	memcpy(ipdata.ipdst, &(rpl_current.dodag_id), 16);
+	memcpy(ipdata.ipdst, rpl_current.dodag_id, 16);
 	/* TODO: How to get ipsrc? */
 
 	return icmp_send(interface, RPL_ICMP_TYPE, RPL_DAO, &ipdata, data, len + sizeof(struct rpl_dao_base));
@@ -213,7 +225,8 @@ int32   rpl_send_dao (
 int32	rpl_send_dio (
 	int32 interface, 	/* The interface on which to send the DIO */
 	char *options, 		/* The options to send along with the DIO */
-	uint32 len		/* The length of the options buffer */
+	uint32 len,		/* The length of the options buffer */
+	struct ipinfo *dest	/* Where to send the DIO */
 	)
 {
 	struct rpl_dio_base base;
@@ -223,5 +236,12 @@ int32	rpl_send_dio (
 	base.version = rpl_current.dodag_version;
 	base.rank = rpl_current.rank;
 	base.g_mop_prf = rpl_current.g_mop_preference;
-	base.
+	base.dtsn = rpl_current.dtsn;
+	memcpy(base.dodag_id, rpl_current.dodag_id, 16);
+
+	char data[len + sizeof(struct rpl_dio_base)];
+	memcpy(data, &base, sizeof(struct rpl_dio_base));
+	memcpy((data + sizeof(struct rpl_dio_base)), options, len);
+
+	return icmp_send(interface, RPL_ICMP_TYPE, RPL_DIO, dest, data, len + sizeof(struct rpl_dio_base)); 
 }
