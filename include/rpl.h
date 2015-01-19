@@ -4,6 +4,8 @@
 
 #define RPL_NODE_NUM		16	/* TODO: Is this a good number of nodes to support */
 
+#define MAX_PARENTS		4
+
 /* RPL Control Message Codes - defined in RFC 6550, section 6 */
 #define RPL_DIS 		0x00	/* DODAG Information Solicitation */
 #define RPL_DIO 		0x01	/* DODAG Information Object */
@@ -110,13 +112,18 @@ struct rpl_info
 	byte		dtsn;
 };
 
-/* RPL Node Entry */
-struct rpl_entry 
+struct rpl_parent
 {
-	ifipaddr node;		/* The node that this entry refers to */
-	ifipaddr parent;	/* The parent of this node */
-	/* TODO: Technically, a node can have multiple parents...for now,
-		only one parent is supported.  This will probably need fixing. */
+	ifipaddr 	address;
+	byte 		preference;
+	uint32		path_lifetime;
+};
+
+/* RPL Node Entry */
+struct rpl_entry
+{
+	ifipaddr 		node;			/* The node that this entry refers to */
+	struct rpl_parent 	parents[MAX_PARENTS];	/* The parents of this node */
 };
 
 extern struct rpl_entry rpl_tab[RPL_NUM_NODES];
