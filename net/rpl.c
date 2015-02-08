@@ -4,7 +4,8 @@ struct 	rpl_info rpl_current;
 struct 	rpl_entry rpl_tab[RPL_NUM_NODES];
 
 uint32 	rpl_fill_options(char*, uint32, char*, uint32);
-void	irpl_add_parent(const char*, uint32);
+void	rpl_add_parent(const char*, uint32);
+bool8	rpl_cmp_addr(ifipaddr, ifipaddr);
 
 /* -------------------------------------------------------
  * rpl_init - Initializes global RPL variables
@@ -23,7 +24,7 @@ void rpl_init(void)
 	/* Set the DODAG ID to be the IPv6 address of the network interface */
 	memcpy(rpl_current.dodag_id, if_tab[0].if_ipucast[0].ipaddr, 16);
 
-	memset(rpl_tab, 0, sizeof(rpl_entry) * RPL_NUM_NODES);
+	memset(rpl_tab, 0, sizeof(byte) + sizeof(rpl_entry) * RPL_NUM_NODES);
 }
 
 /* --------------------------------------------------------
@@ -215,14 +216,58 @@ void	rpl_add_parent(
 	for(i = 0; i < target_counter; i++)
 	{
 		int j;
+		bool8 target_found = FALSE;
 		for(j = 0; j < RPL_NODE_NUM; j++)
 		{
-				
+			if(rpl_cmp_addr(rpl_tab.nodes[j].node, targets[i]) == TRUE)
+			{
+				target_found = TRUE;
+				break;
+			}		
+		}
+
+		if(target_found)
+		{
+			rpl_entry entry = rpl_tab[j];
+			/* Replace node's parents with the new set */
+			memcpy(entry.parents, parents, sizeof(parents));
+			entry.num_parents = parent_counter;
+		} else 
+		{
+			/* Add a new entry in rpl_tab */
+			rpl_tab.nodes[rpl_tab.num_nodes].num_parents = parent_counter;
+			memcpy(&(rpl_tab.nodes[rpl_tab.num_nodes].node), targets[i], sizeof(ifipaddr));
+			memcpy(&(rpl_tab.nodes[rpl_tab.num_nodes].parents), parents, sizeof(parents));
+			rpl_tab.num_nodes++;
 		}
 	}
 }
-	
 
+/* ------------------------------------------------------
+ *  rpl_cmp_addr - Compares two IP addresses to see if 
+ *	they route to the same exact address
+ * ------------------------------------------------------ */
+bool8	rpl_cmp_addr(
+	ifipaddr 		addr1, 
+	ifipaddr 		addr2
+	)
+{
+	if(addr1.ippreflen != addr2.ippreflen)
+	{
+		return FALSE;
+	}
+
+	int i;
+	for(i = 0; i < addr1.ippreflen; i++)
+	{
+		if(addr1.ipaddr[i] != addr2.ipaddr[i])
+		{
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
 /* -------------------------------------------------------
  * recv_dao_ack - Receives DAO-ACK and copies as much of
  * the included options into the options buffer 

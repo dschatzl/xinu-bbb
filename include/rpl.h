@@ -128,7 +128,13 @@ struct rpl_entry
 	byte			num_parents;		/* The number of parents this entry has */
 };
 
-extern struct rpl_entry rpl_tab[RPL_NUM_NODES];
+struct rpl_table
+{
+	rpl_entry 		nodes[RPL_NUM_NODES];
+	byte			num_nodes;
+};
+
+extern struct rpl_table rpl_tab[RPL_NUM_NODES];
 
 /* Global current RPL State */
 extern struct rpl_info rpl_current;
