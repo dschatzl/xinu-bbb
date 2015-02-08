@@ -4,7 +4,8 @@
 
 #define RPL_NODE_NUM		16	/* TODO: Is this a good number of nodes to support */
 
-#define MAX_PARENTS		4
+#define RPL_MAX_PARENTS		4	/* This is specified by the Path Control field in the Transit Information Option in section 6.7.8 of RFC 6550 */
+#define	RPL_MAX_TARGETS_PER_DAO	4	/* Used in rpl_recv_dao, and set arbitrarily */
 
 /* RPL Control Message Codes - defined in RFC 6550, section 6 */
 #define RPL_DIS 		0x00	/* DODAG Information Solicitation */
@@ -123,7 +124,8 @@ struct rpl_parent
 struct rpl_entry
 {
 	ifipaddr 		node;			/* The node that this entry refers to */
-	struct rpl_parent 	parents[MAX_PARENTS];	/* The parents of this node */
+	struct rpl_parent 	parents[RPL_MAX_PARENTS];	/* The parents of this node */
+	byte			num_parents;		/* The number of parents this entry has */
 };
 
 extern struct rpl_entry rpl_tab[RPL_NUM_NODES];
@@ -136,5 +138,6 @@ void	rpl_init(void);
 int32	rpl_send_dis(int32, byte*);
 int32	rpl_recv_dio(int32, uint32, struct rpl_dio_base*, char*, uint32);
 int32	rpl_send_dao(int32, bool8, char*, uint32);
-
+int32	rpl_recv_dao(int32, uint32, struct rpl_dao_base*, char*, uint32);
 int32	rpl_send_dio(int32, char*, uint32, struct ipinfo*);
+int32	rpl_recv_dao_ack(int32, uint32, struct rpl_dao_ack_base*, char*, uint32);

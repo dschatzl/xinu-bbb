@@ -1,9 +1,10 @@
 #include <xinu.h>
 
-struct rpl_info rpl_current;
-struct rpl_entry rpl_tab[RPL_NUM_NODES];
+struct 	rpl_info rpl_current;
+struct 	rpl_entry rpl_tab[RPL_NUM_NODES];
 
-uint32 rpl_fill_options(char*, uint32, char*, uint32);
+uint32 	rpl_fill_options(char*, uint32, char*, uint32);
+void	irpl_add_parent(const char*, uint32);
 
 /* -------------------------------------------------------
  * rpl_init - Initializes global RPL variables
@@ -62,7 +63,7 @@ int32 	rpl_send_dis (
 int32 	rpl_recv_dio (
 	int32 	slot,		/* Slot in the ICMP table */
 	uint32	timeout, 	/* How long to listen for a DIO */
-	struct rpl_dio_base *base, 
+	struct 	rpl_dio_base *base, 
 	char	*opts_buf, 	/* Where to store the DIO options */
 	uint32	len 		/* Length of the options buffer */
 	)
@@ -92,12 +93,142 @@ int32 	rpl_recv_dio (
 	}
 }
 
+/* ----------------------------------------------------------------
+ * rpl_recv_dao - Receives one DAO, and fills opts_buf with options
+ * with options up to len.  Modifies the rpl_tab to create a new 
+ * entry or add a parent to an already existing entry.  If an entry
+ * already has RPL_MAX_PARENTS, the parent with the matching 
+ * preference is replaced.
+ * ---------------------------------------------------------------- */
+int32	rpl_recv_dao (
+	int32	slot,		/* Slot in the ICMP table */
+	uint32	timeout,	/* How long to listen for a DAO */
+	struct rpl_dao_base *base,
+	char	*opts_buf,	/* Where to store the DAO options */
+	uint32	len		/* Length of the options buffer */
+	)
+{
+	uint32 buf_size = len + sizeof(struct rpl_dao_base);
+	char full_buf[buf_size];
+	memset(full_buf, 0, buf_size);
+	int32 bytes_recv = icmp_recv(slot, full_buf, buf_size, timeout);
+	if(bytes_recv == SYSERR)
+	{
+		return SYSERR;
+	}
+
+	memcpy(base, full_buf, sizeof(struct rpl_dao_base));
+	
+	if(opts_buf != NULL)
+	{
+		uint32 bytes_written = rpl_fill_options(
+				full_buf + sizeof(struct rpl_dao_base),
+				bytes_recv - sizeof(struct rpl_dao_base),
+				opts_buf, len);
+
+		rpl_add_parent(opts_buf, bytes_written);
+
+		return (bytes_written + sizeof(struct rpl_dao_base));
+	} else
+	{
+		return sizeof(struct rpl_dao_base);
+	}
+}
+
+
+/* ------------------------------------------------------------------
+ * rpl_add_parent - Adds a parent to the target(s) indicated in 
+ * buf. A new entry is created if a target is not in rpl_tab.  If 
+ * a parent exists for the indicated preference, the old parent is 
+ * replaced with the new parent. NB: This only supports 
+ * ------------------------------------------------------------------ */
+void	rpl_add_parent(
+	const char	*buf,	/* The fill DAO option buffer */
+	uint32		buf_len	/* The size of the buffer */
+	)
+{
+	ifiaddr targets[RPL_MAX_TARGETS];
+	memset(targets, 0, RPL_MAX_TARGETS * sizeof(ifiaddr));		
+
+	/* Find all the targets */
+	uint32 counter = 0;
+	byte target_counter = 0;
+	byte opt_type = 0;
+	byte opt_len = 0;
+	do
+	{
+		opt_type = *(buf + counter);
+		opt_len = *(buf + counter + sizeof(byte));
+		
+		/* All RPL options have at least two bytes - a type and a length */
+		counter += sizeof(byte) + sizeof(byte);
+		if(opt_type == RPL_OPT_RT)
+		{
+			/* The address length starts after one byte from the length */
+			int addr_start = counter + sizeof(byte);
+			byte addr_len = *(buf + addr_start);
+
+			memcpy(&targets[target_counter++], (buf + addr_start), addr_len);
+		}
+
+		counter += opt_len;
+	} while (opt_type != RPL_OPT_TI && counter < buf_len);
+
+	/* If for some reason, we have reached the end (or close enough) to the 
+		 end of the buffer, just leave -- POSSIBLE SOURCE OF WEIRD BUGS */	
+	// TODO: Check this logic, because it is probably not correct
+	if(counter >= buf_len)
+	{
+		return;
+	}
+
+	/* Find all the parents */
+	rpl_parent parents[RPL_MAX_PARENTS];
+	memset(parents, 0, RPL_MAX_PARENTS * sizeof(rpl_parent));
+	byte parent_counter = 0;
+	do
+	{
+		opt_type = *(buf + counter);
+		opt_len = *(buf + counter + sizeof(byte));
+		
+		if(opt_type == RPL_OPT_TI)
+		{
+			/* The preference byte starts at a three byte offset from the 
+				start of the option */
+			uint32 opt_pos = counter + sizeof(byte) + sizeof(byte) + sizeof(byte);
+			parents[parent_counter].preference = *(buf + opt_pos);
+		
+			/* The Path lifetime starts on one byte after the preference */
+			opt_pos += sizeof(byte) + sizeof(byte);
+			parents[parent_counter].path_lifetime = *(buf + opt_pos);
+			/* The address starts at an offset of 4 bytes, and has a size of
+				option length - offset */
+			memcpy(&(parents[parent_counter].address), buf + opt_pos + sizeof(byte), opt_len - 4);
+			parent_counter++;
+		}
+
+		counter += opt_len + sizeof(byte);
+	} while (opt_type == RPL_OPT_TI && counter < buf_len);
+
+	/* Find each target in rpl_tab */
+	int i;
+	for(i = 0; i < target_counter; i++)
+	{
+		int j;
+		for(j = 0; j < RPL_NODE_NUM; j++)
+		{
+				
+		}
+	}
+}
+	
+
 /* -------------------------------------------------------
  * recv_dao_ack - Receives DAO-ACK and copies as much of
  * the included options into the options buffer 
  * -------------------------------------------------------
  */
-int32   recv_dao_ack (
+int32   rpl_recv_dao_ack (
         int32                   slot,		/* The ICMP slot */
 	uint32                  timeout,	/* How long to wait before timeout */
 	struct rpl_dao_ack_base *base,		/* RPL DAO-ACK base */
