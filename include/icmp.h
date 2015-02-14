@@ -33,3 +33,13 @@ struct	icmpentry {			/* entry in the ICMP table	*/
 };
 
 extern	struct	icmpentry icmptab[];	/* table of UDP endpoints	*/
+
+/* ICMP functions */
+
+void	icmp_init(void);
+int32	icmp_register(int32, byte[16], byte[16], byte, byte);
+int32	icmp_release(int32);
+void	icmp_in(struct netpacket*);
+int32	icmp_recv(int32, char*, uint32, uint32);
+int32	icmp_recvaddr(int32, char*, uint32, uint32, struct ipinfo*);
+int32	icmp_send(int32, byte, byte, struct ipinfo*, char*, uint32);
