@@ -1,5 +1,6 @@
 /* netiface.h */
-
+#ifndef NETIFACE_H
+#define NETIFACE_H
 /* Format of Interface IP address */
 
 struct	ifipaddr {
@@ -35,3 +36,4 @@ struct	ifentry {
 };
 
 extern	struct ifentry if_tab[NIFACES];
+#endif

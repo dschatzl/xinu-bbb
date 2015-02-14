@@ -1,11 +1,11 @@
 #include <xinu.h>
 
 struct 	rpl_info rpl_current;
-struct 	rpl_entry rpl_tab[RPL_NUM_NODES];
+struct 	rpl_table rpl_tab;
 
 uint32 	rpl_fill_options(char*, uint32, char*, uint32);
 void	rpl_add_parent(const char*, uint32);
-bool8	rpl_cmp_addr(ifipaddr, ifipaddr);
+bool8	rpl_cmp_addr(struct ifipaddr, struct ifipaddr);
 
 /* -------------------------------------------------------
  * rpl_init - Initializes global RPL variables
@@ -24,7 +24,7 @@ void rpl_init(void)
 	/* Set the DODAG ID to be the IPv6 address of the network interface */
 	memcpy(rpl_current.dodag_id, if_tab[0].if_ipucast[0].ipaddr, 16);
 
-	memset(rpl_tab, 0, sizeof(byte) + sizeof(rpl_entry) * RPL_NUM_NODES);
+	memset(&rpl_tab, 0, sizeof(byte) + sizeof(struct rpl_entry) * RPL_NODE_NUM);
 }
 
 /* --------------------------------------------------------
@@ -148,8 +148,8 @@ void	rpl_add_parent(
 	uint32		buf_len	/* The size of the buffer */
 	)
 {
-	ifiaddr targets[RPL_MAX_TARGETS];
-	memset(targets, 0, RPL_MAX_TARGETS * sizeof(ifiaddr));		
+	struct ifipaddr targets[RPL_MAX_TARGETS_PER_DAO];
+	memset(targets, 0, RPL_MAX_TARGETS_PER_DAO * sizeof(struct ifipaddr));
 
 	/* Find all the targets */
 	uint32 counter = 0;
@@ -184,8 +184,8 @@ void	rpl_add_parent(
 	}
 
 	/* Find all the parents */
-	rpl_parent parents[RPL_MAX_PARENTS];
-	memset(parents, 0, RPL_MAX_PARENTS * sizeof(rpl_parent));
+	struct rpl_parent parents[RPL_MAX_PARENTS];
+	memset(parents, 0, RPL_MAX_PARENTS * sizeof(struct rpl_parent));
 	byte parent_counter = 0;
 	do
 	{
@@ -228,7 +228,7 @@ void	rpl_add_parent(
 
 		if(target_found)
 		{
-			rpl_entry entry = rpl_tab[j];
+			struct rpl_entry entry = rpl_tab.nodes[j];
 			/* Replace node's parents with the new set */
 			memcpy(entry.parents, parents, sizeof(parents));
 			entry.num_parents = parent_counter;
@@ -236,7 +236,7 @@ void	rpl_add_parent(
 		{
 			/* Add a new entry in rpl_tab */
 			rpl_tab.nodes[rpl_tab.num_nodes].num_parents = parent_counter;
-			memcpy(&(rpl_tab.nodes[rpl_tab.num_nodes].node), targets[i], sizeof(ifipaddr));
+			memcpy(&(rpl_tab.nodes[rpl_tab.num_nodes].node), &(targets[i]), sizeof(struct ifipaddr));
 			memcpy(&(rpl_tab.nodes[rpl_tab.num_nodes].parents), parents, sizeof(parents));
 			rpl_tab.num_nodes++;
 		}
@@ -248,8 +248,8 @@ void	rpl_add_parent(
  *	they route to the same exact address
  * ------------------------------------------------------ */
 bool8	rpl_cmp_addr(
-	ifipaddr 		addr1, 
-	ifipaddr 		addr2
+	struct ifipaddr 	addr1,
+	struct ifipaddr 	addr2
 	)
 {
 	if(addr1.ippreflen != addr2.ippreflen)

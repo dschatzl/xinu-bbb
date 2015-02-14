@@ -1,4 +1,5 @@
 /* rpl.h - definitions for the Routing Protocol for Low-power, Lossy Networks */
+#include <netiface.h>
 
 #define RPL_ICMP_TYPE 		155
 
@@ -54,28 +55,28 @@
 /* RPL Base Object Definitions */
 struct rpl_dis_base 
 {
-	byte 	flags;
-	byte 	reserved; /* To be ignored */
+	byte 			flags;
+	byte 			reserved; /* To be ignored */
 };
 
 struct rpl_dio_base
 {
-	byte 		rpl_instance_id;
-	byte 		version;
-	int16 		rank;
-	byte		g_mop_prf; 	/* byte with the format <Grounded>0<Mode of Operation - 3 bits><DODAG Preference - 3 bits> */
-	byte		dtsn;		/* Destination Advertisement Trigger Sequence Number */
-	byte		flags;
-	byte		reserved; 	/* To Be Ignored */
-	byte		dodag_id[16];
+	byte 			rpl_instance_id;
+	byte 			version;
+	int16 			rank;
+	byte			g_mop_prf; 	/* byte with the format <Grounded>0<Mode of Operation - 3 bits><DODAG Preference - 3 bits> */
+	byte			dtsn;		/* Destination Advertisement Trigger Sequence Number */
+	byte			flags;
+	byte			reserved; 	/* To Be Ignored */
+	byte			dodag_id[16];
 };
 
 struct rpl_dao_base
 {
-	byte		rpl_instance_id;
-	byte		k_d_flags; 	/* byte with format <K><D - DODAG ID Presents, will always be 0><Flags - 6 bits> */
-	byte		reserved; 	/* To Be Ignored */
-	byte		dao_instance;
+	byte			rpl_instance_id;
+	byte			k_d_flags; 	/* byte with format <K><D - DODAG ID Presents, will always be 0><Flags - 6 bits> */
+	byte			reserved; 	/* To Be Ignored */
+	byte			dao_instance;
 	/* NB: RFC 6550 also allows for an optional DODAG ID to be specified,
 	 * but we are not supporting that at this time since we are assuming
 	 * that only one DODAG will be present at once */
@@ -83,10 +84,10 @@ struct rpl_dao_base
 
 struct rpl_dao_ack_base
 {
-	byte		rpl_instance_id;
-	byte		d_flag_reserved;	/* Lowest order bit describes if DODAG ID is present (will be 0 for now) and the rest are to be ignored */
-	byte		dao_instance;
-	byte		status;
+	byte			rpl_instance_id;
+	byte			d_flag_reserved;	/* Lowest order bit describes if DODAG ID is present (will be 0 for now) and the rest are to be ignored */
+	byte			dao_instance;
+	byte			status;
         /* NB: RFC 6550 also allows for an optional DODAG ID to be specified,
 	 * but we are not supporting that at this time since we are assuming
 	 * that only one DODAG will be present at once */
@@ -94,47 +95,47 @@ struct rpl_dao_ack_base
 
 struct rpl_consistency_check_base
 {
-	byte		rpl_instance_id;
-	byte		r_flags;	/* Lowest order bit is 1 if message is a response, 0 otherwise. The rest are reserved for flags, but must be set to 0 by sender */
-	uint16		cc_nonce;	/* Set by request, and is the same for the corresponding response */
-	byte		dodag_id[16];	/* Identifier of the DODAG root */
-	uint32		dest_counter;	/* Destination Counter */
+	byte			rpl_instance_id;
+	byte			r_flags;	/* Lowest order bit is 1 if message is a response, 0 otherwise. The rest are reserved for flags, but must be set to 0 by sender */
+	uint16			cc_nonce;	/* Set by request, and is the same for the corresponding response */
+	byte			dodag_id[16];	/* Identifier of the DODAG root */
+	uint32			dest_counter;	/* Destination Counter */
 };
 
 /* RPL State Structs */
 struct rpl_info
 {
-	byte		rpl_instance_id;
-	byte		dodag_id[16];
-	byte		dodag_version;
-	uint16		rank;
-	byte		dao_sequence;
-	byte		g_mop_preference;
-	byte		dtsn;
+	byte			rpl_instance_id;
+	byte			dodag_id[16];
+	byte			dodag_version;
+	uint16			rank;
+	byte			dao_sequence;
+	byte			g_mop_preference;
+	byte			dtsn;
 };
 
 struct rpl_parent
 {
-	ifipaddr 	address;
-	byte 		preference;
-	uint32		path_lifetime;
+	struct ifipaddr 	address;
+	byte 			preference;
+	uint32			path_lifetime;
 };
 
 /* RPL Node Entry */
 struct rpl_entry
 {
-	ifipaddr 		node;			/* The node that this entry refers to */
+	struct ifipaddr 	node;			/* The node that this entry refers to */
 	struct rpl_parent 	parents[RPL_MAX_PARENTS];	/* The parents of this node */
 	byte			num_parents;		/* The number of parents this entry has */
 };
 
 struct rpl_table
 {
-	rpl_entry 		nodes[RPL_NUM_NODES];
+	struct rpl_entry 	nodes[RPL_NODE_NUM];
 	byte			num_nodes;
 };
 
-extern struct rpl_table rpl_tab[RPL_NUM_NODES];
+extern struct rpl_table rpl_tab;
 
 /* Global current RPL State */
 extern struct rpl_info rpl_current;
