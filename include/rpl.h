@@ -1,6 +1,4 @@
 /* rpl.h - definitions for the Routing Protocol for Low-power, Lossy Networks */
-#include <netiface.h>
-
 #define RPL_ICMP_TYPE 		155
 
 #define RPL_NODE_NUM		16	/* TODO: Is this a good number of nodes to support */
